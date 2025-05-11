@@ -1,0 +1,313 @@
+from typing import List, Set, Tuple
+import time
+
+Clauza = Set[int]
+Formula = List[Clauza]
+
+def incarca_formula_din_dimacs(nume_fisier: str) -> Formula:
+    formula = []
+    with open(nume_fisier, "r") as f:
+        for linie in f:
+            linie = linie.strip()
+            if linie.startswith("c") or linie.startswith("p") or linie == "":
+                continue
+            literali = list(map(int, linie.split()))
+            literali = [lit for lit in literali if lit != 0]
+            if literali:
+                formula.append(set(literali))
+    return formula
+
+def davis_putnam(formula: Formula) -> bool:
+    formula = [set(c) for c in formula]
+    while True:
+        unitari = {next(iter(c)) for c in formula if len(c) == 1}
+        if not unitari:
+            break
+        for u in unitari:
+            formula = [c for c in formula if u not in c]
+            for c in formula:
+                c.discard(-u)
+
+        toti_literalii = {lit for c in formula for lit in c}
+        puri = {lit for lit in toti_literalii if -lit not in toti_literalii}
+        if puri:
+            formula = [c for c in formula if not c & puri]
+
+        if any(len(c) == 0 for c in formula):
+            return False
+        if not formula:
+            return True
+
+        lit = next(iter(next(iter(formula))))
+        pozitive = [c for c in formula if lit in c]
+        negative = [c for c in formula if -lit in c]
+        noua_formula = [(p | n) - {lit, -lit} for p in pozitive for n in negative]
+        rest = [c for c in formula if lit not in c and -lit not in c]
+        formula = noua_formula + rest
+
+    return True
+
+if __name__ == "__main__":
+    formula = incarca_formula_din_dimacs("formula_satisf_mare.cnf")
+
+    start = time.perf_counter()
+    rezultat = davis_putnam(formula)
+    durata = time.perf_counter() - start
+
+    print(f"Formula este {'SATISFIABILĂ' if rezultat else 'NESATISFIABILĂ'}")
+    print(f"Timp de execuție: {durata * 1000:.3f} ms")
+
+
+formula_satisf_mare.cnf
+
+p cnf 80 250
+68 0
+-46 0
+8 70 0
+-22 -19 0
+-35 31 0
+49 0
+77 -33 0
+-17 39 0
+-51 53 -17 0
+-44 63 0
+-38 62 0
+-18 0
+-35 -50 0
+49 0
+11 -58 0
+-17 0
+-35 62 63 0
+8 -51 0
+25 31 0
+11 37 -9 0
+37 31 0
+-4 -50 -17 0
+11 77 0
+-46 0
+57 -52 0
+41 -46 -17 0
+37 0
+-30 -44 0
+57 -14 1 0
+-29 70 0
+-58 -17 0
+-46 -29 0
+-78 63 31 0
+-22 -27 0
+68 -35 0
+-24 -58 -33 0
+26 -28 0
+-4 0
+57 74 0
+8 73 -78 0
+41 0
+23 0
+64 6 0
+-12 0
+-14 0
+1 -58 0
+-12 15 0
+2 37 31 0
+64 -13 -18 0
+10 53 70 0
+11 0
+53 -18 -33 0
+2 -51 0
+-24 -27 0
+16 54 0
+60 0
+73 65 16 0
+-78 74 0
+-19 -18 0
+68 63 0
+-14 26 66 0
+-29 0
+49 15 63 0
+-36 -67 0
+-40 65 -21 0
+60 62 0
+60 0
+-56 0
+-17 0
+-56 -17 0
+77 0
+80 -58 15 0
+-22 26 11 0
+10 70 -17 0
+-44 60 -58 0
+-69 -52 31 0
+73 0
+8 -52 15 0
+54 0
+64 57 -18 0
+-38 0
+23 0
+-72 76 23 0
+-69 0
+-33 0
+-35 0
+-36 -67 0
+65 11 -67 0
+-67 0
+-9 0
+23 0
+-52 0
+-17 0
+41 -13 0
+68 0
+-56 -46 0
+-40 54 0
+-27 37 -58 0
+-52 -4 0
+25 10 -69 0
+42 2 0
+55 63 0
+70 -35 -58 0
+-75 0
+63 0
+-51 0
+8 -78 0
+-72 55 0
+-56 -9 0
+43 -13 0
+-13 -52 0
+16 -52 0
+-50 0
+-21 0
+-14 0
+-46 0
+-22 -52 37 0
+57 0
+65 -46 -13 0
+-35 -17 0
+57 -19 0
+49 37 0
+63 0
+-59 0
+53 63 0
+49 68 0
+-13 0
+64 -7 6 0
+2 47 0
+-78 47 0
+-38 0
+25 -19 0
+-21 31 0
+48 0
+-34 -33 0
+76 0
+74 43 0
+42 3 -5 0
+41 20 -58 0
+-22 15 0
+48 25 0
+-32 26 0
+10 0
+-34 0
+-9 15 0
+-79 -19 0
+-7 0
+-72 55 0
+61 0
+60 -51 0
+77 -67 0
+-56 -67 0
+-28 15 0
+49 68 0
+2 53 -50 0
+49 0
+-79 3 25 0
+26 0
+48 -22 -56 0
+80 0
+43 -19 0
+76 0
+57 61 0
+41 0
+26 0
+-38 -28 0
+8 73 6 0
+-46 -59 -58 0
+41 0
+16 -79 0
+-21 0
+-14 0
+8 -75 0
+-13 0
+-28 0
+2 -67 0
+61 0
+-35 0
+-51 0
+48 20 0
+-78 0
+1 37 0
+-22 -13 0
+80 -27 -17 0
+80 65 47 0
+-7 -38 -45 0
+73 -69 0
+-40 -59 0
+-58 0
+-71 0
+42 0
+-79 49 0
+-71 20 61 0
+6 0
+23 0
+66 0
+63 0
+-56 41 0
+-32 26 -59 0
+80 15 0
+-14 -9 0
+66 0
+-45 -18 0
+-79 -78 0
+-21 -35 0
+74 -52 0
+65 -9 0
+-27 0
+31 0
+11 -19 55 0
+-46 0
+-21 -17 -9 0
+-13 0
+-56 42 0
+-30 -52 0
+43 -67 47 0
+-40 47 0
+-29 53 0
+11 0
+-79 0
+-56 -67 0
+26 0
+16 61 0
+62 0
+-19 0
+-12 -33 0
+66 42 0
+74 -4 77 0
+-9 0
+-24 57 0
+74 -12 0
+48 0
+73 68 -58 0
+-59 0
+-21 0
+-58 0
+-19 37 47 0
+-79 -35 0
+8 16 55 0
+-40 -5 15 0
+41 -67 0
+-52 0
+80 -51 -34 0
+-22 15 0
+-59 0
+39 0
+73 0
+77 0
+-14 0
+70 0
