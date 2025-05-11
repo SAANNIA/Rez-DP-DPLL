@@ -1,0 +1,309 @@
+from typing import List, Set, Tuple
+import time
+
+Clauza = Set[int]
+Formula = List[Clauza]
+
+def rezolva(c1: Clauza, c2: Clauza) -> Tuple[bool, Clauza]:
+    for lit in c1:
+        if -lit in c2:
+            rez = (c1 | c2) - {lit, -lit}
+            return True, rez
+    return False, set()
+
+def rezolutie(formula: Formula) -> bool:
+    new = set()
+    formula_set = set(frozenset(c) for c in formula)
+    while True:
+        pairs = [(ci, cj) for i, ci in enumerate(formula) for j, cj in enumerate(formula) if i < j]
+        for ci, cj in pairs:
+            success, resolvent = rezolva(ci, cj)
+            if success:
+                if not resolvent:
+                    return False  # Clauză vidă => nesatisfiabil
+                new.add(frozenset(resolvent))
+        if new.issubset(formula_set):
+            return True  # Nimic nou => satisfiabil
+        formula_set.update(new)
+        formula = list(formula_set)
+
+def incarca_formula_din_dimacs(nume_fisier: str) -> Formula:
+    formula = []
+    with open(nume_fisier, "r") as f:
+        for linie in f:
+            linie = linie.strip()
+            if linie.startswith("c") or linie.startswith("p") or linie == "":
+                continue
+            literali = list(map(int, linie.split()))
+            literali = [lit for lit in literali if lit != 0]
+            if literali:
+                formula.append(set(literali))
+    return formula
+
+if __name__ == "__main__":
+    # Citește formula din fișierul generat anterior
+    formula = incarca_formula_din_dimacs("formula_mare.cnf")
+
+    start = time.perf_counter()
+    rezultat = rezolutie(formula)
+    durata = time.perf_counter() - start
+
+    print(f"Formula este {'SATISFIABILĂ' if rezultat else 'NESATISFIABILĂ'}")
+    print(f"Timp de execuție: {durata * 1000:.3f} ms")
+
+formula_mare.cnf
+
+p cnf 80 250
+16 -69 -52 0
+35 -20 0
+-29 0
+41 0
+-74 14 0
+-23 0
+29 70 39 0
+-19 18 -11 0
+43 -13 -27 0
+-14 -6 15 0
+-31 0
+20 68 -12 0
+35 43 44 0
+-8 62 -73 0
+-79 77 -17 0
+-42 0
+14 0
+18 -20 -49 0
+30 0
+-5 0
+-56 0
+73 -71 12 0
+67 7 0
+-26 0
+-80 59 0
+-67 7 0
+-14 -13 0
+19 47 0
+10 0
+34 3 0
+43 60 -58 0
+47 0
+-56 6 0
+49 -22 0
+-73 0
+-48 77 0
+65 0
+75 -38 -61 0
+-5 -51 0
+-44 0
+26 19 6 0
+43 70 -73 0
+14 0
+-43 0
+15 0
+73 0
+-7 -13 0
+-33 22 -17 0
+-36 0
+61 38 0
+-47 66 -50 0
+16 -79 -27 0
+-4 -3 0
+63 0
+-14 5 -59 0
+3 0
+48 68 55 0
+-4 -59 0
+-48 0
+-8 59 -18 0
+-45 38 0
+56 5 -26 0
+42 -3 0
+16 -68 -10 0
+-16 0
+-34 0
+19 0
+-45 0
+-70 13 0
+-77 23 0
+11 0
+-3 21 77 0
+64 -2 0
+-16 0
+-27 0
+29 69 0
+74 0
+42 -60 0
+8 0
+-56 24 28 0
+-15 -45 45 0
+-22 68 -66 0
+-3 0
+-24 13 38 0
+-1 7 0
+18 0
+-40 -26 0
+-19 0
+-35 19 -51 0
+-64 74 0
+44 -50 0
+40 -24 -30 0
+60 -41 0
+-16 35 0
+-56 -14 -37 0
+-53 -13 0
+-57 0
+12 47 0
+24 0
+9 60 0
+38 -9 0
+25 -36 -2 0
+69 -41 0
+-5 0
+34 -30 39 0
+69 0
+-62 0
+-28 0
+-21 28 69 0
+80 0
+-37 -25 0
+-70 -68 -66 0
+-64 1 -49 0
+-18 -57 0
+24 -53 -3 0
+-63 0
+61 0
+-23 20 0
+-54 21 -10 0
+67 -25 0
+5 -74 0
+73 67 21 0
+-9 31 0
+7 0
+-40 52 -57 0
+-44 0
+-22 -11 0
+-54 67 0
+10 0
+-31 0
+51 0
+41 38 0
+10 -75 -17 0
+32 -58 0
+18 -26 0
+1 68 -28 0
+-52 22 -73 0
+65 66 68 0
+-40 1 -13 0
+15 0
+58 67 -52 0
+45 0
+40 0
+56 -60 0
+-67 -33 0
+-54 61 -34 0
+35 12 0
+64 -36 7 0
+-7 0
+38 0
+-39 -43 38 0
+-64 22 0
+80 79 -33 0
+-39 17 14 0
+25 59 15 0
+-3 0
+61 0
+-63 -76 -1 0
+-3 34 74 0
+-12 31 0
+58 -18 -26 0
+77 30 0
+-72 0
+-59 0
+9 0
+-29 28 21 0
+62 0
+24 -68 -11 0
+51 -73 0
+-46 19 -50 0
+25 -9 0
+-30 21 0
+78 -20 -50 0
+-19 15 0
+8 0
+50 21 -10 0
+49 52 0
+-32 17 0
+58 -22 6 0
+58 62 0
+-79 4 -2 0
+-37 0
+41 34 0
+-13 0
+-63 11 -55 0
+50 79 0
+-27 0
+32 71 0
+41 -75 31 0
+60 0
+69 -10 0
+76 39 -73 0
+-32 -43 0
+58 12 -25 0
+34 69 0
+-78 0
+-21 0
+40 78 0
+-56 -47 37 0
+-79 5 0
+-50 -2 0
+38 15 0
+35 -49 0
+-22 71 0
+-70 0
+-23 0
+80 -15 0
+19 0
+67 -20 0
+-80 -7 0
+62 0
+60 0
+76 0
+-72 -35 79 0
+-76 54 63 0
+-70 0
+-31 61 0
+-13 28 23 0
+73 0
+-14 -74 -50 0
+58 -26 15 0
+56 46 0
+72 0
+29 0
+-47 3 0
+-40 10 0
+-23 -46 54 0
+-56 0
+69 0
+-73 0
+-3 -74 -73 0
+-75 -34 55 0
+-35 41 -3 0
+49 20 0
+74 0
+1 -68 29 0
+-76 15 0
+-32 1 0
+-78 -59 -17 0
+-14 -13 0
+-60 5 55 0
+-4 45 0
+66 31 0
+-31 0
+26 0
+62 0
+-30 0
+-8 -46 0
+-4 0
+2 13 0
+
+
+
