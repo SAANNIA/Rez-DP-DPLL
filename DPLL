@@ -1,0 +1,273 @@
+from typing import List, Set
+import time
+
+Clauza = Set[int]
+Formula = List[Clauza]
+
+def incarca_formula_din_dimacs(nume_fisier: str) -> Formula:
+    formula = []
+    with open(nume_fisier, "r") as f:
+        for linie in f:
+            linie = linie.strip()
+            if linie.startswith("c") or linie.startswith("p") or linie == "":
+                continue
+            literali = list(map(int, linie.split()))
+            literali = [lit for lit in literali if lit != 0]
+            if literali:
+                formula.append(set(literali))
+    return formula
+
+def dpll_corect(formula: Formula, assignment: Set[int] = None) -> bool:
+    if assignment is None:
+        assignment = set()
+
+    formula = [cl.copy() for cl in formula]
+
+    # Eliminăm clauzele satisfăcute
+    for lit in assignment:
+        formula = [cl for cl in formula if lit not in cl]
+        for cl in formula:
+            cl.discard(-lit)
+
+    # Formula satisfăcută complet
+    if not formula:
+        return True
+
+    # Clauză vidă => contradicție
+    if any(len(cl) == 0 for cl in formula):
+        return False
+
+    # Propagare unitară
+    unitari = [next(iter(cl)) for cl in formula if len(cl) == 1]
+    if unitari:
+        for lit in unitari:
+            new_assignment = assignment.copy()
+            new_assignment.add(lit)
+            if not dpll_corect(formula, new_assignment):
+                return False
+        return True
+
+    # Alegem literal și aplicăm backtracking
+    for cl in formula:
+        for lit in cl:
+            return (
+                dpll_corect(formula, assignment | {lit}) or
+                dpll_corect(formula, assignment | {-lit})
+            )
+
+    return False
+
+if __name__ == "__main__":
+    formula = incarca_formula_din_dimacs("formula_nesatisfabila_mica.cnf")  # sau alt fișier
+
+    start = time.perf_counter()
+    rezultat = dpll_corect(formula)
+    durata = time.perf_counter() - start
+
+    print(f"Formula este {'SATISFIABILĂ' if rezultat else 'NESATISFIABILĂ'}")
+    print(f"Timp de execuție: {durata * 1000:.3f} ms")
+
+
+formula_nesatisfabila_mica.cnf
+
+p cnf 80 200
+-77 -43 -1 0
+-71 -60 0
+-16 -43 0
+-43 0
+-78 -1 0
+73 50 67 0
+48 25 63 0
+-79 50 -9 0
+-7 -60 -11 0
+18 0
+-31 35 -20 0
+19 -37 0
+29 -26 0
+-9 0
+46 -41 0
+48 67 0
+29 0
+-77 63 -9 0
+-11 0
+-34 0
+-9 0
+52 -74 0
+48 58 67 0
+-6 0
+-45 -44 0
+48 -31 -61 0
+49 55 -65 0
+-79 69 22 0
+-16 0
+-9 0
+-39 55 0
+-43 0
+-41 -9 0
+-47 -54 -71 0
+-56 -79 0
+-8 -66 -26 0
+-64 -43 0
+-16 -37 0
+-12 0
+-42 0
+-8 0
+-8 -17 0
+-16 38 14 0
+-2 0
+-79 51 0
+4 0
+-64 4 -57 0
+-7 -78 0
+-54 52 0
+-40 22 0
+-78 35 0
+72 -37 -53 0
+-34 0
+-75 0
+-66 -1 0
+-47 -75 0
+-56 -61 -74 0
+-44 0
+-8 -20 0
+-64 73 -79 0
+48 -74 0
+-39 -79 0
+-68 0
+38 0
+-30 67 -20 0
+25 50 14 0
+-56 50 0
+-64 -39 0
+-11 -66 0
+70 0
+-24 -16 0
+-78 18 0
+-78 19 -65 0
+-47 19 -1 0
+72 18 0
+-75 -1 0
+19 -74 0
+-40 50 0
+-26 0
+48 51 0
+4 29 0
+-3 -33 0
+63 0
+-40 5 -41 0
+35 0
+13 -1 -17 0
+59 -10 0
+59 -76 0
+51 0
+-47 -79 14 0
+80 -8 -65 0
+-45 -44 -3 0
+-43 -65 0
+80 -77 -61 0
+-79 14 0
+73 -44 -41 0
+-68 28 0
+50 52 0
+-54 -78 -39 0
+50 -1 15 0
+-61 0
+-74 -2 0
+72 63 0
+-8 0
+-47 19 -33 0
+80 72 0
+35 0
+-76 0
+18 4 -65 0
+29 0
+-47 63 0
+-7 35 0
+-11 46 0
+-39 -44 0
+-43 -9 0
+-26 63 0
+25 0
+-45 22 0
+80 0
+18 28 -17 0
+-64 55 0
+-45 -3 0
+-24 46 -33 0
+-8 -56 0
+-8 58 70 0
+-43 0
+-23 0
+-37 -27 0
+-11 -43 0
+-61 -41 0
+25 0
+-44 46 -33 0
+25 -68 0
+-43 38 0
+-40 -45 15 0
+52 0
+52 -66 0
+-10 0
+48 0
+51 67 -37 0
+-64 -47 -26 0
+58 22 0
+-56 35 0
+-45 4 -74 0
+-54 -65 0
+-44 13 0
+-7 0
+73 -47 0
+-8 -2 0
+59 -61 -65 0
+-64 13 0
+-71 0
+-7 -44 46 0
+35 0
+67 -68 0
+49 -26 0
+-56 67 63 0
+22 0
+-45 0
+-16 -75 0
+-8 35 69 0
+-44 -12 -2 0
+-39 -60 -2 0
+32 -77 0
+-30 0
+4 0
+-45 -76 0
+63 0
+-47 69 0
+-68 0
+-33 0
+69 -9 0
+25 -74 0
+-61 -2 0
+-71 0
+-42 0
+-42 0
+15 0
+-31 0
+15 -42 -9 0
+-27 0
+-16 0
+72 13 0
+-16 -12 62 0
+-31 0
+-47 4 -74 0
+25 -17 0
+-23 0
+69 46 -17 0
+-12 5 -66 0
+29 0
+5 -3 -42 0
+-79 0
+50 0
+52 -3 -65 0
+-42 62 0
+-23 52 -74 0
+4 0
+-68 0
+-43 0
